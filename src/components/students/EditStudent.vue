@@ -1,7 +1,7 @@
 <template>
     <div class="form-blog">
         <h1 class="text-center p-4 text-uppercase text-primary">Cập nhật thông tin sinh viên</h1>
-        <form class="row g-4" @submit.prevent="save()">
+        <form class="row g-4">
             <router-link :to="{ name: 'list-student' }">
                 <button type="button" class="btn btn-secondary btn-back">Quay lại</button>
             </router-link>
@@ -39,27 +39,31 @@
             </div>
             <div class="col-md-6">
                 <label for="avatar" class="form-label">Ảnh đại diện</label>
-                <input type="file" class="form-control" id="avatar">
+                <input type="file" @blur="validate()" class="form-control" id="avatar">
+                <span class="text-danger" v-if="errors.avatar">{{ errors.avatar }}</span>
             </div>
             <fieldset class="row mb-3">
-                <legend class="col-form-label col-sm-0 pt-4">Giới tính:</legend>
-                <div class="col-sm-10">
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="gridRadios" id="male" value="male" checked>
-                        <label class="form-check-label" for="male">
-                        Nam
-                        </label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="gridRadios" id="famale" value="famale">
-                        <label class="form-check-label" for="famale">
-                        Nữ
-                        </label>
-                    </div>
+                <legend class="col-form-label col-sm-0 pt-4">Giới tính: {{ students.genders }}</legend>
+                <span class="text-danger" v-if="errors.genders">{{ errors.genders }}</span>
+                <div class="col-sm-10" >
+                    <input type="radio" class="form-check-input me-3" id="male" value="Nam" 
+                        @blur="validate()" 
+                        v-model="students.genders">
+                    <label class="form-check-label" for="male">Nam</label><br>
+
+                    <input type="radio" class="form-check-input me-3" id="famale" value="Nữ" 
+                        @blur="validate()" 
+                        v-model="students.genders">
+                    <label class="form-check-label" for="famale">Nữ</label><br>
+
+                    <input type="radio" class="form-check-input me-3" id="other" value="Khác" 
+                        @blur="validate()" 
+                        v-model="students.genders">
+                    <label class="form-check-label" for="other">Khác</label>
                 </div>
             </fieldset>
             <div class="col-12 btn-style">
-                <button type="submit" class="btn btn-primary">Cập nhật</button>
+                <button @click.prevent="save()" type="submit" class="btn btn-primary">Cập nhật</button>
                 <button type="submit" class="btn btn-danger">Huỷ bỏ</button>
             </div>
         </form>
@@ -82,20 +86,8 @@ const students = ref(
         email: '',
         address: '',
         phone: '',
-        genders: [
-            {
-                code: "M",
-                gender: "Nam"
-            },
-            {
-                code: "N",
-                gender: "Nữ"
-            },
-            {
-                code: "B",
-                gender: "Bê Đê"
-            }
-        ]
+        avatar: '',
+        genders: ''
     }
 )
 
@@ -104,20 +96,8 @@ const errors = ref({
     email: '',
     address: '',
     phone: '',
-    genders: [
-        {
-            code: "M",
-            gender: "Nam"
-        },
-        {
-            code: "N",
-            gender: "Nữ"
-        },
-        {
-            code: "B",
-            gender: "Bê Đê"
-        }
-    ]
+    avatar: '',
+    genders: ''
 })
 
 const validate = () => {
@@ -125,31 +105,37 @@ const validate = () => {
     errors.value.email = ''
     errors.value.address = ''
     errors.value.phone = ''
+    errors.value.avatar = ''
+    errors.value.genders = ''
 
     let isValid = true
 
     if(!students.value.fullname) {
-        errors.value.fullname = 'Bạn vui lòng nhập tên của bạn'
+        errors.value.fullname = 'Vui lòng nhập tên của bạn!'
         isValid = false
     }
 
     if(!students.value.email) {
-        errors.value.email = 'Bạn vui lòng nhập email của bạn'
+        errors.value.email = 'Vui lòng nhập email của bạn!'
     } else if(!isEmail(students.value.email)) {
-        errors.value.email = 'Email phải nhập đúng định dạng' 
+        errors.value.email = 'Email phải nhập đúng định dạng!' 
         isValid = false
     }
 
     if(!students.value.address) {
-        errors.value.address = 'Bạn vui lòng nhập địa chỉ của bạn'
+        errors.value.address = 'Vui lòng nhập địa chỉ của bạn!'
         isValid = false
     }
     
     if(!students.value.phone) {
-        errors.value.phone = 'Bạn vui lòng nhập số điện thoại của bạn'
+        errors.value.phone = 'Vui lòng nhập số điện thoại của bạn!'
     } else if(!isNumber(students.value.phone)) {
-        errors.value.phone = 'Số điện thoại phải có dạng là số'
+        errors.value.phone = 'Số điện thoại phải có dạng là số!'
         isValid = false
+    }
+
+    if(!students.value.genders) {
+        errors.value.genders = 'Vui lòng chọn giới tính của bạn!'
     }
 
     return isValid
@@ -161,10 +147,6 @@ const isNumber = (value) => {
 const isEmail = (value) => {
     return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(value)
 }
-
-// const selectedGender = (option) => {
-//     genders.value = option;
-// }
 
 onMounted(() => {
     axios.get(`http://localhost:8000/api/students/${params.id}`).then(res => {
@@ -181,6 +163,7 @@ const save = () => {
             email: students.value.email,
             address: students.value.address,
             phone: students.value.phone,
+            gender: students.value.genders
         }).then(res => {
             if(res.data.success) {
                 router.push({name: 'list-student'})
@@ -214,7 +197,6 @@ const save = () => {
     .form-blog {
         margin: 0;
         box-sizing: border-box;
-        border: 1px solid #ccc;
     }
 
     form {

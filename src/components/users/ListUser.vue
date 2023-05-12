@@ -1,7 +1,7 @@
 <template>
     <div class="form-blog">
-        <h1 class="text-center p-4 text-danger text-uppercase">Danh sách sinh viên</h1>
-        <router-link :to="{ name: 'create-student' }">
+        <h1 class="text-center p-4 text-danger text-uppercase">Danh sách tài khoản người dùng</h1>
+        <router-link :to="{ name: 'create-user' }">
             <button type="button" class="btn btn-success btn-create">Thêm mới</button>
         </router-link>
         <table class="table table-bordered table-striped table-hover">
@@ -10,30 +10,27 @@
                     <th scope="col">STT</th>
                     <th scope="col">Họ và tên</th>
                     <th scope="col">Email</th>
-                    <th scope="col">Địa chỉ</th>
                     <th scope="col">Số điện thoại</th>
-                    <th scope="col">Giới tính</th>
                     <th scope="col">Hành động</th>
                 </tr>
             </thead>
             <tbody>
-                <tr :key="index" v-for="(student, index) in students">
+                <tr :key="index" v-for="(user, index) in users">
                     <th scope="row" class="text-center">{{ index + 1 }}</th>
-                    <td>{{ student.fullname }}</td>
-                    <td>{{ student.email }}</td>
-                    <td>{{ student.address }}</td>
-                    <td>{{ student.phone }}</td>
-                    <td>{{ student.gender }}</td>
+                    <td>{{ user.fullname }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.phone }}</td>
                     <td class="action">
                         <router-link :to="{ name: '' }">
                             <button type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" class="btn btn-info">Chi tiết</button>
                         </router-link>
-                        <router-link :to="{ name: 'edit-student', params:{id: student.id} }">
+                        <router-link :to="{ name: 'edit-user', params:{id: user.id} }">
                             <button type="button" class="btn btn-primary">Sửa</button>
                         </router-link>
                         <router-link :to="{ name: '' }">
                             <button type="button" 
-                                @click="deleteStudent(student.id)"
+                                v-if="userInfo.id != user.id"
+                                @click="deleteUser(user.id)"
                                 class="btn btn-danger">Xoá</button>
                         </router-link>
                     </td>
@@ -46,7 +43,7 @@
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">THÔNG TIN CHI TIẾT SINH VIÊN</h5>
+                    <h5 class="modal-title text-uppercase" id="exampleModalLabel">Thông tin chi tiết tài khoản người dùng</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-table p-2">
@@ -57,22 +54,24 @@
                                 <th scope="col">Ảnh đại diện</th>
                                 <th scope="col">Họ và tên</th>
                                 <th scope="col">Email</th>
+                                <th scope="col">Password</th>
                                 <th scope="col">Địa chỉ</th>
                                 <th scope="col">Số điện thoại</th>
                                 <th scope="col">Giới tính</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr :key="index" v-for="(student, index) in students">
+                            <tr :key="index" v-for="(user, index) in users">
                                 <th scope="row" class="text-center">{{ index + 1 }}</th>
                                 <td>
                                     <img src="" alt="">
                                 </td>
-                                <td>{{ student.fullname }}</td>
-                                <td>{{ student.email }}</td>
-                                <td>{{ student.address }}</td>
-                                <td>{{ student.phone }}</td>
-                                <td>{{ student.gender }}</td>
+                                <td>{{ user.fullname }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>{{ user.password }}</td>
+                                <td>{{ user.address }}</td>
+                                <td>{{ user.phone }}</td>
+                                <td>{{ user.gender }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -87,25 +86,35 @@
   
 <script setup>
 
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import axios from 'axios';
 import Swal from 'sweetalert2'
 
-const students = ref([])
+const users = ref([])
+
+const userInfo = computed(() => {
+    let userObject = JSON.parse(localStorage.getItem('user_info'))
+
+    if(!userObject) {
+        return null
+    }
+    return userObject.user
+}) 
+
 
 onMounted(() => {
     getStudent()
 })
 
 const getStudent = () => {
-    axios.get(`http://localhost:8000/api/students`).then(res => {
-        students.value = res.data
+    axios.get(`http://localhost:8000/api/users`).then(res => {
+        users.value = res.data
     }).catch(err => {
         console.log(err);
     })
 }
 
-const deleteStudent = (id) => {
+const deleteUser = (id) => {
     Swal.fire({
         title: "Bạn có chắc muốn xoá không?",
         showCancelButton: true,
