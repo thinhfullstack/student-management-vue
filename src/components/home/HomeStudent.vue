@@ -7,13 +7,11 @@
     </div>
 </template>
 
-
 <style scoped>
     .home-sv {
         text-align: center;
-        margin-top: 60px;
+        margin: 60px 0;
     }
-
     .btn-sv {
         display: block;
         margin: 0 auto;
